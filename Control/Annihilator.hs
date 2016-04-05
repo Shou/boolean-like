@@ -1,8 +1,5 @@
 
-{-# LANGUAGE DefaultSignatures, FlexibleInstances, ViewPatterns,
-    TypeFamilies #-}
-
--- | A class for Annihilators, which define a binary function @>|>@ that follows
+-- | A class for Annihilators, which define a binary function '>|>' that follows
 -- the mathematical properties of: absorbing element, associativity, and
 -- commutativity.
 module Control.Annihilator
@@ -61,8 +58,9 @@ instance (Annihilator a, Annihilator b) => Annihilator (a, b) where
 
 -- | Annihilating concatenation.
 aconcat :: (Annihilator a, Foldable t) => t a -> a
-aconcat [] = ann
-aconcat as = foldr1 (>|>) as
+aconcat as
+    | null as   = ann
+    | otherwise = foldr1 (>|>) as
 
 -- | Monadic append with the annihilating operator guarding each argument.
 amappend :: (Annihilator a, Monoid a) => a -> a -> a
@@ -70,8 +68,9 @@ amappend a b = (a >|> b) `mappend` (a <|< b)
 
 -- | Monadic concatenation with the annihilating operator guarding each argument.
 amconcat :: (Annihilator a, Monoid a, Foldable t) => t a -> a
-amconcat [] = ann
-amconcat as = foldr1 amappend as
+amconcat as
+    | null as   = ann
+    | otherwise = foldr1 amappend as
 
 -- | Discard the argument and return 'ann'.
 avoid :: Annihilator a => a -> a

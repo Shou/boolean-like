@@ -1,17 +1,22 @@
 name:                annihilator
 version:             0.1.0.0
-synopsis:            Initial project template from stack
-description:         Annihilators
+synopsis:            Semigroups with annihilators and utility functions
+description:
+    
 homepage:            http://github.com/Shou/annihilator#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Benedict Aas
 maintainer:          x@shou.io
 copyright:           2016 Benedict Aas
-category:            Web
+category:            Control 
+homepage:            http://github.com/Shou/annihilator
+bug-reports:         http://github.com/Shou/annihilator/issues
 build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
+tested-with:
+    GHC==7.10.3
 
 library
   exposed-modules:     Control.Annihilator
