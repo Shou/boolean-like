@@ -1,10 +1,10 @@
 name:                annihilator
-version:             0.1.0.0
+version:             0.2.0.0
 synopsis:            Semigroups with annihilators and utility functions
 description:
-    Annihilators are semigroups with annihilators and therefore almost act as
-    the opposite of Alternative. This package comes with the typeclass and
-    utility functions.
+    Annihilators are semigroups with annihilators, or absorbing elements, and
+    therefore almost act as the opposite of Alternative. This package comes
+    with the typeclass and utility functions.
 homepage:            http://github.com/Shou/annihilator#readme
 bug-reports:         http://github.com/Shou/annihilator/issues
 license:             BSD3
@@ -12,7 +12,7 @@ license-file:        LICENSE
 author:              Benedict Aas
 maintainer:          x@shou.io
 copyright:           2016 Benedict Aas
-category:            Control 
+category:            Control
 build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
@@ -27,4 +27,14 @@ library
 source-repository head
   type:     git
   location: https://github.com/Shou/annihilator
+
+benchmark benchmarks
+  type:             exitcode-stdio-1.0
+  hs-source-dirs:   . benchmarks
+  main-is:          Benchmark.hs
+  build-depends:    base >= 4.7 && < 5,
+                    criterion
+
+  ghc-options:      -Wall
+                    -O2
 

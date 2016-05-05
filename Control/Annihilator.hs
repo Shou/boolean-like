@@ -1,10 +1,29 @@
 
--- | A class for Annihilators, which define a binary function '>|>' that follows
--- the mathematical properties of: absorbing element, associativity, and
--- commutativity.
+
+-- | A class Annihilators which defines a binary function '>&>' that follows
+-- the mathematical properties of absorbing element and associativity.
+--
+-- If you consider 'Control.Applicative.Alternative' to be OR, this is the AND
+-- analogous to that, e.g. in Alternative
+--
+-- > Nothing <|> Nothing == Nothing
+-- > Nothing <|> Just 1 == Just 1
+-- > Just 1 <|> Nothing == Just 1
+-- > Just 1 <|> Just 2 == Just 1
+--
+-- whereas with Annihilators
+--
+-- > Nothing <&< Nothing == Nothing
+-- > Nothing <&< Just 1 == Nothing
+-- > Just 1 <&< Nothing == Nothing
+-- > Just 1 <&< Just 2 == Just 1
+--
+-- This is useful when reasoning about datatypes with failures such as
+-- 'Maybe' or '[a]'.
+--
 module Control.Annihilator
     ( Annihilator(..)
-    , (<|<)
+    , (<&<)
     , aconcat
     , amappend
     , amconcat
@@ -12,67 +31,111 @@ module Control.Annihilator
     )
     where
 
--- | Annihilators are semigroups with annihilators, i.e. the
+
+import Data.Monoid (Sum(..), Product(..))
+
+
+-- | Annihilators are semigroups with an absorbing element, i.e. the
 -- following laws should hold:
 --
--- prop> ann >|> b = ann
--- prop> a >|> ann = ann
--- prop> a >|> b = b
+-- __Absorbing element__
+--
+-- prop> ann >&> b == ann
+-- prop> a >&> ann == ann
+--
+-- __Associativity__
+--
+-- prop> (a >&> b) >&> c == a >&> (b >&> c)
+--
 class Annihilator a where
-    -- | Annihilating element of '>|>'.
+    -- | Annihilating element of '>&>'.
     ann :: a
 
-    -- | Annihilating operator, returns the rightmost element if no
-    -- annihilators 'ann' are present.
-    (>|>) :: a -> a -> a
+    -- | Annihilating operator, returns the rightmost argument on success, i.e.
+    --   if no annihilators 'ann' are present.
+    (>&>) :: a -> a -> a
 
 
 instance Annihilator () where
     ann = ()
+    {-# INLINE ann #-}
 
-    _ >|> _ = ()
+    _ >&> _ = ()
+    {-# INLINE (>&>) #-}
 
 instance Annihilator (Maybe a) where
     ann = Nothing
+    {-# INLINE ann #-}
 
-    Nothing >|> _ = Nothing
-    _ >|> Nothing = Nothing
-    _ >|> a = a
+    Nothing >&> _ = Nothing
+    _ >&> Nothing = Nothing
+    _ >&> a = a
+    {-# INLINE (>&>) #-}
+
+-- | 'ann' needs a default value in 'Left', which is rather arbitrarily 'mempty' here.
+instance Monoid a => Annihilator (Either a b) where
+    ann = Left mempty
+    {-# INLINE ann #-}
+
+    (Left a) >&> _ = Left a
+    _ >&> (Left b) = Left b
+    _ >&> b = b
+    {-# INLINE (>&>) #-}
 
 instance Annihilator ([] a) where
     ann = []
+    {-# INLINE ann #-}
 
-    [] >|> _ = []
-    _ >|> [] = []
-    _ >|> a = a
+    [] >&> _ = []
+    _ >&> [] = []
+    _ >&> a = a
+    {-# INLINE (>&>) #-}
 
 instance (Annihilator a, Annihilator b) => Annihilator (a, b) where
     ann = (ann, ann)
+    {-# INLINE ann #-}
 
-    (a1, b1) >|> (a2, b2) = (a1 >|> a2, b1 >|> b2)
+    (a1, b1) >&> (a2, b2) = (a1 >&> a2, b1 >&> b2)
+    {-# INLINE (>&>) #-}
+
+instance (Annihilator a, Annihilator b, Annihilator c) => Annihilator (a, b, c) where
+    ann = (ann, ann, ann)
+    {-# INLINE ann #-}
+
+    (a1, b1, c1) >&> (a2, b2, c2) = (a1 >&> a2, b1 >&> b2, c1 >&> c2)
+    {-# INLINE (>&>) #-}
 
 
--- | Flipped version of '>|>'.
-(<|<) :: Annihilator a => a -> a -> a
-(<|<) = flip (>|>)
+-- | Flipped version of '>&>'. Returns the leftmost argument on success.
+(<&<) :: Annihilator a => a -> a -> a
+(<&<) = flip (>&>)
+{-# INLINE (<&<) #-}
 
--- | Annihilating concatenation.
+-- | Annihilating concatenation. Returns the last element on success.
 aconcat :: (Annihilator a, Foldable t) => t a -> a
 aconcat as
     | null as   = ann
-    | otherwise = foldr1 (>|>) as
+    | otherwise = foldr1 (>&>) as
+{-# INLINE aconcat #-}
 
 -- | Monadic append with the annihilating operator guarding each argument.
+--   Returns the mappended result on success.
 amappend :: (Annihilator a, Monoid a) => a -> a -> a
-amappend a b = (a >|> b) `mappend` (a <|< b)
+amappend a b = (a <&< b) `mappend` (a >&> b)
+{-# INLINE amappend #-}
 
 -- | Monadic concatenation with the annihilating operator guarding each argument.
 amconcat :: (Annihilator a, Monoid a, Foldable t) => t a -> a
 amconcat as
     | null as   = ann
     | otherwise = foldr1 amappend as
+{-# INLINE amconcat  #-}
+
+isAnn :: (Annihilator a, Eq a) => a -> Bool
+isAnn = (ann ==)
 
 -- | Discard the argument and return 'ann'.
 avoid :: Annihilator a => a -> a
 avoid = const ann
+{-# INLINE avoid #-}
 
