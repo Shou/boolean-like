@@ -1,7 +1,8 @@
 
 
--- | A class Annihilators which defines a binary function '>&>' that follows
--- the mathematical properties of absorbing element and associativity.
+-- | A pair of classes Annihilator and Annihilating which respectively define
+-- an annihilating element 'ann' and a binary function '>&>' that follows the
+-- mathematical properties of annihilating (absorbing element) and associativity.
 --
 -- If you consider 'Control.Applicative.Alternative' to be OR, this is the AND
 -- analogous to that, e.g. in Alternative
@@ -23,6 +24,7 @@
 --
 module Control.Annihilator
     ( Annihilator(..)
+    , Annihilating(..)
     , (<&<)
     , aconcat
     , amappend
@@ -32,7 +34,11 @@ module Control.Annihilator
     where
 
 
-import Data.Monoid (Sum(..), Product(..))
+import Data.Monoid (Sum(..), Product(..), Any(..), All(..))
+
+
+infixr 7 >&>
+infixl 7 <&<
 
 
 -- | Annihilators are semigroups with an absorbing element, i.e. the
@@ -47,19 +53,21 @@ import Data.Monoid (Sum(..), Product(..))
 --
 -- prop> (a >&> b) >&> c == a >&> (b >&> c)
 --
-class Annihilator a where
-    -- | Annihilating element of '>&>'.
-    ann :: a
-
+class Annihilating a where
     -- | Annihilating operator, returns the rightmost argument on success, i.e.
     --   if no annihilators 'ann' are present.
     (>&>) :: a -> a -> a
+
+class Annihilating a => Annihilator a where
+    -- | Annihilating element of '>&>'.
+    ann :: a
 
 
 instance Annihilator () where
     ann = ()
     {-# INLINE ann #-}
 
+instance Annihilating () where
     _ >&> _ = ()
     {-# INLINE (>&>) #-}
 
@@ -67,16 +75,13 @@ instance Annihilator (Maybe a) where
     ann = Nothing
     {-# INLINE ann #-}
 
+instance Annihilating (Maybe a) where
     Nothing >&> _ = Nothing
     _ >&> Nothing = Nothing
     _ >&> a = a
     {-# INLINE (>&>) #-}
 
--- | 'ann' needs a default value in 'Left', which is rather arbitrarily 'mempty' here.
-instance Monoid a => Annihilator (Either a b) where
-    ann = Left mempty
-    {-# INLINE ann #-}
-
+instance Annihilating (Either a b) where
     (Left a) >&> _ = Left a
     _ >&> (Left b) = Left b
     _ >&> b = b
@@ -86,6 +91,7 @@ instance Annihilator ([] a) where
     ann = []
     {-# INLINE ann #-}
 
+instance Annihilating ([] a) where
     [] >&> _ = []
     _ >&> [] = []
     _ >&> a = a
@@ -95,6 +101,7 @@ instance (Annihilator a, Annihilator b) => Annihilator (a, b) where
     ann = (ann, ann)
     {-# INLINE ann #-}
 
+instance (Annihilating a, Annihilating b) => Annihilating (a, b) where
     (a1, b1) >&> (a2, b2) = (a1 >&> a2, b1 >&> b2)
     {-# INLINE (>&>) #-}
 
@@ -102,12 +109,23 @@ instance (Annihilator a, Annihilator b, Annihilator c) => Annihilator (a, b, c) 
     ann = (ann, ann, ann)
     {-# INLINE ann #-}
 
+instance (Annihilating a, Annihilating b, Annihilating c) => Annihilating (a, b, c) where
     (a1, b1, c1) >&> (a2, b2, c2) = (a1 >&> a2, b1 >&> b2, c1 >&> c2)
     {-# INLINE (>&>) #-}
 
+instance Annihilator All where
+    ann = All False
+instance Annihilating All where
+    All x >&> All y = All (x && y)
+
+instance Annihilator Product where
+    ann = Product 0
+instance Annihilating Product where
+    x >&> y = Product (getProduct x * getProduct y)
+
 
 -- | Flipped version of '>&>'. Returns the leftmost argument on success.
-(<&<) :: Annihilator a => a -> a -> a
+(<&<) :: Annihilating a => a -> a -> a
 (<&<) = flip (>&>)
 {-# INLINE (<&<) #-}
 
@@ -120,7 +138,7 @@ aconcat as
 
 -- | Monadic append with the annihilating operator guarding each argument.
 --   Returns the mappended result on success.
-amappend :: (Annihilator a, Monoid a) => a -> a -> a
+amappend :: (Annihilating a, Monoid a) => a -> a -> a
 amappend a b = (a <&< b) `mappend` (a >&> b)
 {-# INLINE amappend #-}
 
@@ -135,7 +153,7 @@ isAnn :: (Annihilator a, Eq a) => a -> Bool
 isAnn = (ann ==)
 
 -- | Discard the argument and return 'ann'.
-avoid :: Annihilator a => a -> a
+avoid :: Annihilator a => b -> a
 avoid = const ann
 {-# INLINE avoid #-}
 
