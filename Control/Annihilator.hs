@@ -2,7 +2,7 @@
 
 -- | A pair of classes Annihilator and Annihilating which respectively define
 -- an annihilating element 'ann' and a binary function '>&>' that follows the
--- mathematical properties of annihilating (absorbing element) and associativity.
+-- mathematical properties of annihilation (absorbing element).
 --
 -- If you consider 'Control.Applicative.Alternative' to be OR, this is the AND
 -- analogous to that, e.g. in Alternative
@@ -26,15 +26,19 @@ module Control.Annihilator
     ( Annihilator(..)
     , Annihilating(..)
     , (<&<)
-    , aconcat
+    , alast
+    , ahead
     , amappend
     , amconcat
+    , isAnn
     , avoid
     )
     where
 
 
-import Data.Monoid (Sum(..), Product(..), Any(..), All(..))
+import Data.Monoid (Product(..), All(..))
+import qualified Data.Text as T
+import qualified Data.ByteString as B
 
 
 infixr 7 >&>
@@ -44,14 +48,15 @@ infixl 7 <&<
 -- | Annihilators are semigroups with an absorbing element, i.e. the
 -- following laws should hold:
 --
+-- __Associativity__
+--
+-- prop> (a >&> b) >&> c == a >&> (b >&> c)
+--
 -- __Absorbing element__
 --
 -- prop> ann >&> b == ann
 -- prop> a >&> ann == ann
---
--- __Associativity__
---
--- prop> (a >&> b) >&> c == a >&> (b >&> c)
+-- prop> a >&> b == b
 --
 class Annihilating a where
     -- | Annihilating operator, returns the rightmost argument on success, i.e.
@@ -97,6 +102,20 @@ instance Annihilating ([] a) where
     _ >&> a = a
     {-# INLINE (>&>) #-}
 
+instance Annihilator T.Text where
+    ann = T.empty
+instance Annihilating T.Text where
+    ta >&> tb
+        | T.null ta || T.null tb = T.empty
+        | otherwise              = tb
+
+instance Annihilator B.ByteString where
+    ann = B.empty
+instance Annihilating B.ByteString where
+    ba >&> bb
+        | B.null ba || B.null bb = B.empty
+        | otherwise              = bb
+
 instance (Annihilator a, Annihilator b) => Annihilator (a, b) where
     ann = (ann, ann)
     {-# INLINE ann #-}
@@ -115,13 +134,17 @@ instance (Annihilating a, Annihilating b, Annihilating c) => Annihilating (a, b,
 
 instance Annihilator All where
     ann = All False
+    {-# INLINE ann #-}
 instance Annihilating All where
     All x >&> All y = All (x && y)
+    {-# INLINE (>&>) #-}
 
-instance Annihilator Product where
+instance Num a => Annihilator (Product a) where
     ann = Product 0
-instance Annihilating Product where
+    {-# INLINE ann #-}
+instance Num a => Annihilating (Product a) where
     x >&> y = Product (getProduct x * getProduct y)
+    {-# INLINE (>&>) #-}
 
 
 -- | Flipped version of '>&>'. Returns the leftmost argument on success.
@@ -130,11 +153,18 @@ instance Annihilating Product where
 {-# INLINE (<&<) #-}
 
 -- | Annihilating concatenation. Returns the last element on success.
-aconcat :: (Annihilator a, Foldable t) => t a -> a
-aconcat as
+alast :: (Annihilator a, Foldable t) => t a -> a
+alast as
     | null as   = ann
     | otherwise = foldr1 (>&>) as
-{-# INLINE aconcat #-}
+{-# INLINE alast #-}
+
+-- | Annihilating concatenation. Returns the first element on success.
+ahead :: (Annihilator a, Foldable t) => t a -> a
+ahead as
+    | null as   = ann
+    | otherwise = foldr1 (<&<) as
+{-# INLINE ahead #-}
 
 -- | Monadic append with the annihilating operator guarding each argument.
 --   Returns the mappended result on success.
@@ -151,9 +181,10 @@ amconcat as
 
 isAnn :: (Annihilator a, Eq a) => a -> Bool
 isAnn = (ann ==)
+{-# INLINE isAnn #-}
 
 -- | Discard the argument and return 'ann'.
-avoid :: Annihilator a => b -> a
+avoid :: Annihilator a => a -> a
 avoid = const ann
 {-# INLINE avoid #-}
 

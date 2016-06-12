@@ -4,7 +4,8 @@ synopsis:            Semigroups with annihilators and utility functions
 description:
     Annihilators are semigroups with annihilators, or absorbing elements, and
     therefore almost act as the opposite of Alternative. This package comes
-    with the typeclass and utility functions.
+    with the typeclasses Annihilator for the absorbing element and
+    Annihilating for the operator, and utility functions.
 homepage:            http://github.com/Shou/annihilator#readme
 bug-reports:         http://github.com/Shou/annihilator/issues
 license:             BSD3
@@ -21,7 +22,7 @@ tested-with:
 
 library
   exposed-modules:     Control.Annihilator
-  build-depends:       base >= 4.7 && < 5
+  build-depends:       base >= 4.7 && < 5, bytestring, text
   default-language:    Haskell2010
 
 source-repository head
