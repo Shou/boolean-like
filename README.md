@@ -5,6 +5,10 @@ that define operations dealing with boolean-representable structures such
 as `Maybe` which has true-like `Just` and false-like `Nothing`, or `[a]` by
 true-like non-empty list and false-like empty list.
 
+```haskell
+import Control.BoolLike
+```
+
 # Typeclasses
 
 ## Falsifier
