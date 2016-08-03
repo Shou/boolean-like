@@ -1,7 +1,7 @@
 
 # Introduction
 This package first-and-foremost provides a set of logical combinators,
-under the typeclasses Andlike`, `Orlike`, and `Xorlike`,
+under the typeclasses `Andlike`, `Orlike`, and `Xorlike`,
 that define operations dealing with boolean-representable structures such
 as `Maybe` which has true-like `Just` and false-like `Nothing`, or `[a]` by
 true-like non-empty list and false-like empty list. It also introduces
@@ -89,10 +89,6 @@ false <^> b == b
 a <^> false == a
 a <^> b == false
 ```
-
-## Batteries included
-
-
 
 # Examples
 
