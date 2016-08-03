@@ -12,9 +12,17 @@ unary false-like constructor, such as `Nothing`.
 import Combinator.Booly
 ```
 
-# Typeclasses
+# Typeclasses and constraints
 
 ## Falsifier
+
+```haskell
+type Falsifier a = (Eq a, Monoid a)
+
+false :: Falsifier a => a
+false = mempty
+```
+
 The false-representing constructor value. Examples:
 
 * `Maybe`: `Nothing`
@@ -23,6 +31,12 @@ The false-representing constructor value. Examples:
 
 
 ## Andlike
+
+```haskell
+class Andlike a where
+    (<&<) :: a -> a -> a
+```
+
 Boolean-like logic operation `<&<` that acts like AND for any
 boolean-representable datatypes, e.g. `[]` or `Maybe`.
 
@@ -46,6 +60,12 @@ a <&< b == b
 ```
 
 ## Orlike
+
+```haskell
+class Orlike a where
+    (<|<) :: a -> a -> a
+```
+
 Boolean-like logic operation `<|<` that acts like OR for any
 boolean-representable datatypes, e.g. `[a]` or `Maybe`. It is basically
 `Control.Applicative.(<|>)` with a list instance that doesn't append.
@@ -70,6 +90,12 @@ a <|< b == a
 ```
 
 ## Xorlike
+
+```haskell
+class Xorlike a where
+    (<^>) :: a -> a -> a
+```
+
 Boolean-like logic operation `<^>` that acts like XOR for any
 boolean-representable datatypes, e.g. `[]` or `Maybe`.
 
@@ -89,6 +115,8 @@ false <^> b == b
 a <^> false == a
 a <^> b == false
 ```
+
+# Helpful functions
 
 # Examples
 
