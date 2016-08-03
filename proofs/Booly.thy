@@ -24,7 +24,7 @@ lemma and_assoc:
 by (metis andlike.elims andlike.simps(2) andlike.simps(3) strucEq.elims(2) strucEq.elims(3))
 
 lemma and_struc_commut:
-  "strEq (andlike a b) (andlike b a)"
+  "strucEq (andlike a b) (andlike b a)"
 by (metis andlike.elims strucEq.simps(1) strucEq.simps(2))
 
 fun
@@ -39,13 +39,8 @@ lemma or_assoc:
 by (metis option.collapse orlike.simps(1) orlike.simps(2) orlike.simps(3))
 
 lemma or_struc_commut:
-  "strEq (orlike a b) (orlike b a)"
+  "strucEq (orlike a b) (orlike b a)"
 by (metis not_None_eq orlike.simps(2) orlike.simps(3) strucEq.elims(3))
-
-lemma or_commut:
-  "orlike a b = orlike b a"
-sledgehammer
-sorry
 
 fun
   xorlike :: "'a option \<Rightarrow> 'a option \<Rightarrow> 'a option"
@@ -56,7 +51,7 @@ where
 | "xorlike _ (Some a) = Some a"
 
 lemma xor_not_assoc:
-  "\<exists>a b c. strEq (xorlike (xorlike a b) c) (xorlike a (xorlike b c))"
+  "\<exists>a b c. strucEq (xorlike (xorlike a b) c) (xorlike a (xorlike b c))"
 apply (rule exI[where x="Some _"])
 apply (rule exI[where x="Some _"])
 apply (rule exI[where x="Some _"])
@@ -64,11 +59,11 @@ apply auto
 done
 
 lemma xor_struc_assoc:
-  "strEq (xorlike a (xorlike b c)) (xorlike (xorlike a b) c)"
-by (metis (no_types, lifting) not_None_eq strEq.elims(3) xorlike.simps(1) xorlike.simps(2) xorlike.simps(3) xorlike.simps(4))
+  "strucEq (xorlike a (xorlike b c)) (xorlike (xorlike a b) c)"
+by (metis (no_types, lifting) not_None_eq strucEq.elims(3) xorlike.simps(1) xorlike.simps(2) xorlike.simps(3) xorlike.simps(4))
 
 lemma xor_struc_commut:
-  "strEq (xorlike a b) (xorlike b a)"
-by (metis (full_types) option.collapse option.simps(3) strEq.elims(3) xorlike.simps(2) xorlike.simps(3) xorlike.simps(4))
+  "strucEq (xorlike a b) (xorlike b a)"
+by (metis (full_types) option.collapse option.simps(3) strucEq.elims(3) xorlike.simps(2) xorlike.simps(3) xorlike.simps(4))
 
 end
