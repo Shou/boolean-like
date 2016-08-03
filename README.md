@@ -5,11 +5,11 @@ under the typeclasses `Andlike`, `Orlike`, and `Xorlike`,
 that define operations dealing with boolean-representable structures such
 as `Maybe` which has true-like `Just` and false-like `Nothing`, or `[a]` by
 true-like non-empty list and false-like empty list. It also introduces
-the optional typeclass `Falsifier` which is defined to be the false-like value
-provided it's composed of a unary constructor.
+the optional type constraint `Falsifier` which is for types containing a
+unary false-like constructor, such as `Nothing`.
 
 ```haskell
-import Control.BoolLike
+import Combinator.Booly
 ```
 
 # Typeclasses
@@ -23,26 +23,26 @@ The false-representing constructor value. Examples:
 
 
 ## Andlike
-Boolean-like logic operation `>&>` that acts like AND for any
+Boolean-like logic operation `<&<` that acts like AND for any
 boolean-representable datatypes, e.g. `[]` or `Maybe`.
 
 __Associativity__
 
 ```haskell
-(a >&> b) >&> c == a >&> (b >&> c)
+(a <&< b) <&< c == a <&< (b <&< c)
 ```
 
 __Structural commutativity__
 
-`a >&> b` is structurally equivalent to `b >&> a`.
+`a <&< b` is structurally equivalent to `b <&< a`.
 
 __Absorbing element / truth table__
 
 ```haskell
-false >&> false == false
-false >&> b == false
-a >&> false == false
-a >&> b == b
+false <&< false == false
+false <&< b == false
+a <&< false == false
+a <&< b == b
 ```
 
 ## Orlike
