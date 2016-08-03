@@ -134,9 +134,7 @@ instance Orlike Bool where
     (<|<) = (||)
 
 instance Xorlike Bool where
-    True <^> False = True
-    False <^> True = True
-    _ <^> _ = False
+    (ba <^> bb) = (ba || bb) && (not ba || not bb)
 
 instance Falsifier Bool where
     false = False
