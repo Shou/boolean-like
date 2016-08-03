@@ -19,8 +19,10 @@ module Combinator.Booly
     , andMconcat
     , isFalse
     , isTrue
-    , fbool
-    , fvoid
+    , boolF
+    , voidF
+    , whenF
+    , unlessF
     )
     where
 
@@ -326,10 +328,16 @@ isTrue :: (Eq a, Falsifier a) => a -> Bool
 isTrue = not . isFalse
 
 -- | Similar to 'Data.Bool.bool'
-fbool :: (Eq a, Falsifier a) => a -> a -> a -> a
-fbool a b f = if isFalse f then b else a
+boolF :: (Eq a, Eq b, Falsifier a, Falsifier b) => a -> a -> b -> a
+boolF a b f = if isTrue f then a else b
 
 -- | Discard the argument and return 'false'.
-fvoid :: Falsifier a => a -> a
-fvoid = const false
+voidF :: Falsifier a => a -> a
+voidF = const false
+
+whenF :: (Eq a, Eq b, Falsifier a, Falsifier b) => a -> b -> b
+whenF fa fb = if isTrue fa then fb else false
+
+unlessF :: (Falsifier a, Falsifier b) => a -> b -> b
+unlessF fa fb = if isFalse fa then fb else false
 
