@@ -127,6 +127,21 @@ instance Xorlike () where
 instance Falsifier ()
 
 
+instance Andlike Bool where
+    (<&<) = (&&)
+
+instance Orlike Bool where
+    (<|<) = (||)
+
+instance Xorlike Bool where
+    True <^> False = True
+    False <^> True = True
+    _ <^> _ = False
+
+instance Falsifier Bool where
+    false = False
+
+
 instance Andlike (Maybe a) where
     Nothing <&< _ = Nothing
     _ <&< Nothing = Nothing
@@ -251,6 +266,9 @@ instance Ord k => Xorlike (Map.Map k v) where
         | Map.null ma && not (Map.null mb) = mb
         | otherwise = Map.empty
 
+instance Ord k => Falsifier (Map.Map k v) where
+    false = Map.empty
+
 
 instance Andlike (Vec.Vector a)
 
@@ -262,10 +280,17 @@ instance Xorlike (Vec.Vector a) where
         | Vec.null va && not (Vec.null vb) = vb
         | otherwise = Vec.empty
 
+instance Falsifier (Vec.Vector a)
+
 
 instance Andlike (Atto.Parser i a)
 
 instance Orlike (Atto.Parser i a)
+
+-- TODO
+--instance Xorlike (Atto.Parser i a) where
+
+instance Falsifier (Atto.Parser i a)
 
 
 instance (Andlike a, Andlike b) => Andlike (a, b) where
@@ -327,7 +352,7 @@ isFalse = (false ==)
 isTrue :: (Eq a, Falsifier a) => a -> Bool
 isTrue = not . isFalse
 
--- | Similar to 'Data.Bool.bool'
+-- | Similar to 'Data.Bool.bool'.
 boolF :: (Eq a, Eq b, Falsifier a, Falsifier b) => a -> a -> b -> a
 boolF a b f = if isTrue f then a else b
 
@@ -335,9 +360,13 @@ boolF a b f = if isTrue f then a else b
 voidF :: Falsifier a => a -> a
 voidF = const false
 
+-- | Similar to `when` but takes a boolean-like and returns `false`
+--   instead of `()`.
 whenF :: (Eq a, Eq b, Falsifier a, Falsifier b) => a -> b -> b
 whenF fa fb = if isTrue fa then fb else false
 
-unlessF :: (Falsifier a, Falsifier b) => a -> b -> b
+-- | Similar to `unless` but takes a boolean-like and returns `false`
+--   instead of `()`.
+unlessF :: (Eq a, Eq b, Falsifier a, Falsifier b) => a -> b -> b
 unlessF fa fb = if isFalse fa then fb else false
 

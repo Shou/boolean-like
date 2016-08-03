@@ -155,6 +155,62 @@ The false-representing constructor value. Examples:
 
 
 # Helpful functions
+```haskell
+(>&>) :: Andlike a => a -> a -> a
+```
+
+```haskell
+(>|>) :: Orlike a => a -> a -> a
+```
+
+```haskell
+andHead :: (Andlike a, Falsifier a, Foldable t) => t a -> a
+```
+
+```haskell
+andLast :: (Andlike a, Falsifier a, Foldable t) => t a -> a
+```
+Returns the last element on success of all values.
+
+```haskell
+andMappend :: (Andlike a, Monoid a) => a -> a -> a
+```
+Monadic append with the annihilating operator guarding each argument.
+Returns the mappended result on success.
+
+```haskell
+andMconcat :: (Andlike a, Falsifier a, Monoid a, Foldable t) => t a -> a
+```
+Monadic concatenation with the annihilating operator guarding each argument.
+
+```haskell
+isFalse :: (Eq a, Falsifier a) => a -> Bool
+```
+
+```haskell
+isTrue :: (Eq a, Falsifier a) => a -> Bool
+```
+
+```haskell
+boolF :: (Eq a, Eq b, Falsifier a, Falsifier b) => a -> a -> b -> a
+```
+Similar to 'Data.Bool.bool'
+
+```haskell
+voidF :: Falsifier a => a -> a
+```
+Discard the argument and return 'false'.
+
+```haskell
+whenF :: (Eq a, Eq b, Falsifier a, Falsifier b) => a -> b -> b
+```
+Similar to `when` but takes a boolean-like and returns `false` instead of `()`.
+
+```haskell
+unlessF :: (Eq a, Eq b, Falsifier a, Falsifier b) => a -> b -> b
+```
+Similar to `unless` but takes a boolean-like and returns `false` instead of `()`.
+
 
 # Examples
 
