@@ -35,7 +35,8 @@ respectively, and vice versa. `Map` from Data.Map is valid as `Andlike`,
 `Orlike`, and `Xorlike`, but does not have an `Applicative` instance, nor
 `Alternative`. There is an `Applicative` instance for `((->) a)`, but functions
 don't have an empty constructor, which make them invalid instances of all three
-boolean-like typeclasses.
+boolean-like typeclasses. The same problems apply to `Falsifier` which has a
+default instance for `Monoid`s by using `mempty`.
 
 ## Isabelle proofs
 
@@ -44,27 +45,14 @@ equivalent.
 
 # Typeclasses and constraints
 
-## Falsifier
-
-```haskell
-type Falsifier a = (Eq a, Monoid a)
-
-false :: Falsifier a => a
-false = mempty
-```
-
-The false-representing constructor value. Examples:
-
-* `Maybe`: `Nothing`
-* `[a]`: `[]`
-* `Text`: `empty`
-
-
 ## Andlike
 
 ```haskell
 class Andlike a where
     (<&<) :: a -> a -> a
+
+    default (<&<) :: (Applicative f, f b ~ a) => a -> a -> a
+    (<&<) = (<*)
 ```
 
 Boolean-like logic operation `<&<` that acts like AND for any
@@ -94,12 +82,13 @@ a <&< b == b
 ```haskell
 class Orlike a where
     (<|<) :: a -> a -> a
+
+    default (<|<) :: (Alternative f, f b ~ a) => a -> a -> a
+    (<|<) = (<|>)
 ```
 
 Boolean-like logic operation `<|<` that acts like OR for any
-boolean-representable datatypes, e.g. `[a]` or `Maybe`. It is basically
-`Control.Applicative.(<|>)` with a list instance that doesn't append, and the
-argument precedence indicated by the direction of the LT/GT symbols.
+boolean-representable datatypes, e.g. `[a]` or `Maybe`.
 
 __Associativity__
 
@@ -146,6 +135,24 @@ false <^> b == b
 a <^> false == a
 a <^> b == false
 ```
+
+## Falsifier
+
+```haskell
+class Falsifier a where
+    false :: a
+
+    default false :: Monoid a => a
+    false = mempty
+```
+
+The false-representing constructor value. Examples:
+
+* `Maybe`: `Nothing`
+* `[a]`: `[]`
+* `Text`: `empty`
+
+
 
 # Helpful functions
 
