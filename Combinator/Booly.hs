@@ -1,5 +1,5 @@
 
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds, DefaultSignatures, GADTs #-}
 
 
 -- | A set of typeclasses 'Falsifier', 'Andlike', 'Orlike', and 'Xorlike',
@@ -10,22 +10,30 @@ module Combinator.Booly
     ( Andlike(..)
     , Orlike(..)
     , Xorlike(..)
+    , Falsifier(..)
     , (>&>)
     , (>|>)
     , andLast
     , andHead
     , andMappend
     , andMconcat
-    , isFalsifier
+    , isFalse
+    , isTrue
     , fbool
     , fvoid
     )
     where
 
 
-import qualified Data.ByteString as B
+import Control.Applicative (Alternative(..))
+
+-- FIXME both strict and lazy structures when necessary
+import qualified Data.Attoparsec.Internal.Types as Atto
+import qualified Data.ByteString as BS
+import qualified Data.Map as Map
 import Data.Semigroup (Semigroup(..), Option(..))
 import qualified Data.Text as T
+import qualified Data.Vector as Vec
 
 
 infixr 7 >&>
@@ -54,6 +62,10 @@ class Andlike a where
     --   if no 'false' are present.
     (<&<) :: a -> a -> a
 
+    -- | '<*' often shares behaviour with '<&<'.
+    default (<&<) :: (Applicative f, f b ~ a) => a -> a -> a
+    (<&<) = (<*)
+
 -- | Boolean-like logic operation '<|<' that acts like OR for any
 -- boolean-representable datatypes, e.g. '[]' or 'Maybe'. It is basically
 -- 'Control.Applicative.(<|>)' with a list instance that doesn't append.
@@ -74,6 +86,10 @@ class Orlike a where
     -- otherwise the rightmost true-like argument, or finally 'false'.
     (<|<) :: a -> a -> a
 
+    -- | All '<|>' instances except list-likes should share behaviour.
+    default (<|<) :: (Alternative f, f b ~ a) => a -> a -> a
+    (<|<) = (<|>)
+
 -- | Boolean-like logic operation '<^>' that acts like XOR for any
 -- boolean-representable datatypes, e.g. '[]' or 'Maybe'.
 --
@@ -89,12 +105,11 @@ class Xorlike a where
     -- cannot simultaneously be true-like values, or 'false'.
     (<^>) :: a -> a -> a
 
--- | Types that contain unary false-like values.
-type Falsifier a = (Eq a, Monoid a)
+class Falsifier a where
+    false :: a
 
--- | Element representing a false value, a failure.
-false :: Falsifier a => a
-false = mempty
+    default false :: Monoid a => a
+    false = mempty
 
 -- {{{ Instances
 
@@ -106,6 +121,8 @@ instance Orlike () where
 
 instance Xorlike () where
     _ <^> _ = ()
+
+instance Falsifier ()
 
 
 instance Andlike (Maybe a) where
@@ -123,6 +140,9 @@ instance Xorlike (Maybe a) where
     Nothing <^> (Just a) = Just a
     _ <^> _ = Nothing
 
+instance Falsifier (Maybe a) where
+    false = Nothing
+
 
 instance Andlike (Option a) where
     (Option Nothing) <&< _ = Option Nothing
@@ -139,14 +159,17 @@ instance Xorlike (Option a) where
     (Option Nothing) <^> (Option (Just a)) = Option (Just a)
     _ <^> _ = Option Nothing
 
+instance Falsifier (Option a) where
+    false = Option Nothing
+
 
 instance Andlike (Either a b) where
     (Left a) <&< _ = Left a
     _ <&< (Left b) = Left b
-    _ <&< b = b
+    a <&< _ = a
 
 instance Orlike (Either a b) where
-    (Right b) <|< _ = Right b
+    (Right a) <|< _ = Right a
     _ <|< (Right b) = Right b
     (Left a) <|< _ = Left a
 
@@ -166,6 +189,8 @@ instance Xorlike ([] a) where
     [] <^> xs@(_:_) = xs
     _ <^> _ = []
 
+instance Falsifier ([] a)
+
 
 instance Andlike T.Text where
     ta <&< tb
@@ -184,23 +209,61 @@ instance Xorlike T.Text where
         | T.null ta && not (T.null tb) = tb
         | otherwise = T.empty
 
+instance Falsifier T.Text
 
-instance Andlike B.ByteString where
+
+instance Andlike BS.ByteString where
     ba <&< bb
-        | B.null ba || B.null bb = B.empty
-        | otherwise              = ba
+        | BS.null ba || BS.null bb = BS.empty
+        | otherwise                = ba
 
-instance Orlike B.ByteString where
+instance Orlike BS.ByteString where
     ta <|< tb
-        | not (B.null ta) = ta
-        | not (B.null tb) = tb
-        | otherwise = B.empty
+        | not (BS.null ta) = ta
+        | not (BS.null tb) = tb
+        | otherwise = BS.empty
 
-instance Xorlike B.ByteString where
+instance Xorlike BS.ByteString where
     ta <^> tb
-        | not (B.null ta) && B.null tb = ta
-        | B.null ta && not (B.null tb) = tb
-        | otherwise = B.empty
+        | not (BS.null ta) && BS.null tb = ta
+        | BS.null ta && not (BS.null tb) = tb
+        | otherwise = BS.empty
+
+instance Falsifier BS.ByteString
+
+
+instance Ord k => Andlike (Map.Map k v) where
+    ma <&< mb
+        | Map.null ma || Map.null mb = Map.empty
+        | otherwise = ma
+
+instance Ord k => Orlike (Map.Map k v) where
+    ma <|< mb
+        | not (Map.null ma) = ma
+        | not (Map.null mb) = mb
+        | otherwise       = Map.empty
+
+instance Ord k => Xorlike (Map.Map k v) where
+    ma <^> mb
+        | not (Map.null ma) && Map.null mb = ma
+        | Map.null ma && not (Map.null mb) = mb
+        | otherwise = Map.empty
+
+
+instance Andlike (Vec.Vector a)
+
+instance Orlike (Vec.Vector a)
+
+instance Xorlike (Vec.Vector a) where
+    va <^> vb
+        | not (Vec.null va) && Vec.null vb = va
+        | Vec.null va && not (Vec.null vb) = vb
+        | otherwise = Vec.empty
+
+
+instance Andlike (Atto.Parser i a)
+
+instance Orlike (Atto.Parser i a)
 
 
 instance (Andlike a, Andlike b) => Andlike (a, b) where
@@ -256,12 +319,15 @@ andMconcat as
     | null as   = false
     | otherwise = foldr1 andMappend as
 
-isFalsifier :: Falsifier a => a -> Bool
-isFalsifier = (false ==)
+isFalse :: (Eq a, Falsifier a) => a -> Bool
+isFalse = (false ==)
+
+isTrue :: (Eq a, Falsifier a) => a -> Bool
+isTrue = not . isFalse
 
 -- | Similar to 'Data.Bool.bool'
-fbool :: Falsifier a => a -> a -> a -> a
-fbool a b f = if isFalsifier f then b else a
+fbool :: (Eq a, Falsifier a) => a -> a -> a -> a
+fbool a b f = if isFalse f then b else a
 
 -- | Discard the argument and return 'false'.
 fvoid :: Falsifier a => a -> a

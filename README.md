@@ -12,6 +12,36 @@ unary false-like constructor, such as `Nothing`.
 import Combinator.Booly
 ```
 
+## Operator precedence
+
+The operators specify argument precedence where necessary, indicating which
+argument is to be returned when there is a conflict. Xorlike does not have this
+issue because to succeed both cannot be true-like, and when both are false-like
+only unary false-like constructors are allowed, hence the argument precedence
+is irrelevant.
+
+```haskell
+-- Both true-like
+Just 1 <|< Just 2 == Just 1 == Just 2 >|> Just 1
+-- Both false-like
+Left 1 <&< Left 2 == Left 1 == Left 2 >&> Left 1
+```
+
+## Default typeclass signatures
+
+`Andlike` and `Orlike` provide default instances for `Applicative` and
+`Alternative` respectively for convenience because there is a major overlap.
+However, not all `Andlike` and `Orlike` are also `Applicative` and `Applicative`
+respectively, and vice versa. `Map` from Data.Map is valid as `Andlike`,
+`Orlike`, and `Xorlike`, but does not have an `Applicative` instance, nor
+`Alternative`. There is an `Applicative` instance for `((->) a)`, but functions
+don't have an empty constructor, which make them invalid instances of all three
+boolean-like typeclasses.
+
+## Isabelle proofs
+
+Proofs are provided in `proofs/Booly.thy` over the `Maybe` datatype.
+
 # Typeclasses and constraints
 
 ## Falsifier
@@ -68,7 +98,8 @@ class Orlike a where
 
 Boolean-like logic operation `<|<` that acts like OR for any
 boolean-representable datatypes, e.g. `[a]` or `Maybe`. It is basically
-`Control.Applicative.(<|>)` with a list instance that doesn't append.
+`Control.Applicative.(<|>)` with a list instance that doesn't append, and the
+argument precedence indicated by the direction of the LT/GT symbols.
 
 __Associativity__
 
