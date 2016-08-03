@@ -158,14 +158,17 @@ The false-representing constructor value. Examples:
 ```haskell
 (>&>) :: Andlike a => a -> a -> a
 ```
+Flipped version of '<&<'. Returns the leftmost argument on both success or failure.
 
 ```haskell
 (>|>) :: Orlike a => a -> a -> a
 ```
+Flipped version of '<|<'. Returns the leftmost argument on both success or failure.
 
 ```haskell
 andHead :: (Andlike a, Falsifier a, Foldable t) => t a -> a
 ```
+Returns the first element on success of all values.
 
 ```haskell
 andLast :: (Andlike a, Falsifier a, Foldable t) => t a -> a

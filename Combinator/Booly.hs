@@ -315,11 +315,13 @@ instance (Orlike a, Orlike b, Orlike c, Orlike d) => Orlike (a, b, c, d) where
 -- }}}
 
 
--- | Flipped version of '<&<'. Returns the leftmost argument on success.
+-- | Flipped version of '<&<'. Returns the leftmost argument on both
+--   success or failure.
 (>&>) :: Andlike a => a -> a -> a
 (>&>) = flip (<&<)
 
--- | Flipped version of '<|<'. Returns the leftmost argument on success.
+-- | Flipped version of '<|<'. Returns the leftmost argument on both
+--   success or failure.
 (>|>) :: Orlike a => a -> a -> a
 (>|>) = flip (<|<)
 
