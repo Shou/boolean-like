@@ -1,5 +1,4 @@
 
-# Introduction
 This package first-and-foremost provides a set of logical combinators,
 under the typeclasses `Andlike`, `Orlike`, and `Xorlike`,
 that define operations dealing with boolean-representable structures such
@@ -40,7 +39,8 @@ boolean-like typeclasses.
 
 ## Isabelle proofs
 
-Proofs are provided in `proofs/Booly.thy` over the `Maybe` datatype.
+Proofs are provided in `proofs/Booly.thy` over the Isabelle `Maybe` datatype
+equivalent.
 
 # Typeclasses and constraints
 
