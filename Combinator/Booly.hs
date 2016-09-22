@@ -32,6 +32,7 @@ import Control.Applicative (Alternative(..))
 -- FIXME both strict and lazy structures when necessary
 import qualified Data.Attoparsec.Internal.Types as Atto
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map as Map
 import Data.Semigroup (Semigroup(..), Option(..))
 import qualified Data.Text as T
@@ -231,20 +232,35 @@ instance Andlike BS.ByteString where
     ba <&< bb
         | BS.null ba || BS.null bb = BS.empty
         | otherwise                = ba
+instance Andlike BL.ByteString where
+    ba <&< bb
+        | BL.null ba || BL.null bb = BL.empty
+        | otherwise                = ba
 
 instance Orlike BS.ByteString where
     ta <|< tb
         | not (BS.null ta) = ta
         | not (BS.null tb) = tb
         | otherwise = BS.empty
+instance Orlike BL.ByteString where
+    ta <|< tb
+        | not (BL.null ta) = ta
+        | not (BL.null tb) = tb
+        | otherwise = BL.empty
 
 instance Xorlike BS.ByteString where
     ta <^> tb
         | not (BS.null ta) && BS.null tb = ta
         | BS.null ta && not (BS.null tb) = tb
         | otherwise = BS.empty
+instance Xorlike BL.ByteString where
+    ta <^> tb
+        | not (BL.null ta) && BL.null tb = ta
+        | BL.null ta && not (BL.null tb) = tb
+        | otherwise = BL.empty
 
 instance Falsifier BS.ByteString
+instance Falsifier BL.ByteString
 
 
 instance Ord k => Andlike (Map.Map k v) where
