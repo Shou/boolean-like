@@ -13,8 +13,9 @@ import Combinator.Booly
 
 ## Operator precedence
 
-The operators specify argument precedence where necessary, indicating which
-argument is to be returned when there is a conflict. Xorlike does not have this
+The operators specify argument precedence where necessary, visually indicating
+which argument is to be returned when there is a conflict, by the LT/GT symbols.
+Xorlike does not have this
 issue because to succeed both cannot be true-like, and when both are false-like
 only unary false-like constructors are allowed, hence the argument precedence
 is irrelevant.
@@ -30,13 +31,14 @@ Left 1 <&< Left 2 == Left 1 == Left 2 >&> Left 1
 
 `Andlike` and `Orlike` provide default instances for `Applicative` and
 `Alternative` respectively for convenience because there is a major overlap.
-However, not all `Andlike` and `Orlike` are also `Applicative` and `Applicative`
+However, not all `Andlike` and `Orlike` are also `Applicative` and `Alternative`
 respectively, and vice versa. `Map` from Data.Map is valid as `Andlike`,
 `Orlike`, and `Xorlike`, but does not have an `Applicative` instance, nor
 `Alternative`. There is an `Applicative` instance for `((->) a)`, but functions
 don't have an empty constructor, which make them invalid instances of all three
 boolean-like typeclasses. The same problems apply to `Falsifier` which has a
-default instance for `Monoid`s by using `mempty`.
+default instance for `Monoid`s by using `mempty`. Therefore, **be careful when
+making use of the default instances for custom datatypes**.
 
 ## Isabelle proofs
 
@@ -66,7 +68,13 @@ __Associativity__
 
 __Structural commutativity__
 
-`a <&< b` is structurally equivalent to `b <&< a`.
+`a <&< b` is structurally equivalent to `b <&< a` at the first construction
+layer.
+
+```haskell
+Just 1 <&< Just 2 ≅ Just 2 <&< Just 1
+Just _ <&< Just _ ≅ Just _ <&< Just _
+```
 
 __Absorbing element / truth table__
 
@@ -98,7 +106,13 @@ __Associativity__
 
 __Structural commutativity__
 
-`a <|< b` is structurally equivalent to `b <|< a`.
+`a <|< b` is structurally equivalent to `b <|< a` at the first construction
+layer.
+
+```haskell
+Just 1 <|< Just 2 ≅ Just 2 <|< Just 1
+Just _ <|< Just _ ≅ Just _ <|< Just _
+```
 
 __Identity element / Truth table__
 
@@ -121,11 +135,23 @@ boolean-representable datatypes, e.g. `[]` or `Maybe`.
 
 __Structural associativity__
 
-`a <^> (b <^> c)` is structurally equivalent to `(a <^> b) <^> c`.
+`a <^> (b <^> c)` is structurally equivalent to `(a <^> b) <^> c` at the first
+construction layer.
+
+```haskell
+Just 1 <^> (Just 2 <^> Just 3) ≅ (Just 1 <^> Just 2) <^> Just 3
+Just _ <^> (Just _ <^> Just _) ≅ (Just _ <^> Just _) <^> Just _
+```
 
 __Structural commutativity__
 
-`a <^> b` is structurally equivalent to `b <^> a`.
+`a <^> b` is structurally equivalent to `b <^> a` at the first construction
+layer.
+
+```haskell
+Just 1 <^> Just 2 ≅ Just 2 <^> Just 1
+Just _ <^> Just _ ≅ Just _ <^> Just _
+```
 
 __Truth table__
 
