@@ -369,7 +369,7 @@ isTrue :: (Eq a, Falsifier a) => a -> Bool
 isTrue = not . isFalse
 
 -- | Similar to 'Data.Bool.bool'.
-boolF :: (Eq a, Eq b, Falsifier a, Falsifier b) => a -> a -> b -> a
+boolF :: (Eq b, Falsifier b) => a -> a -> b -> a
 boolF a b f = if isTrue f then a else b
 
 -- | Discard the argument and return 'false'.
