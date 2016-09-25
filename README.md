@@ -1,11 +1,11 @@
 
-This package first-and-foremost provides a set of logical combinators,
-under the typeclasses `Andlike`, `Orlike`, and `Xorlike`,
-that define operations dealing with boolean-representable structures such
-as `Maybe` which has true-like `Just` and false-like `Nothing`, or `[a]` by
+A set of logical combinators, under the typeclasses `Andlike`, `Orlike`, and
+`Xorlike`,
+defining operations dealing with boolean-representable structures.
+`Maybe` which has true-like `Just` and false-like `Nothing`, or `[a]` by
 true-like non-empty list and false-like empty list. It also introduces
-the optional type constraint `Falsifier` which is for types containing a
-unary false-like constructor, such as `Nothing`.
+the optional `Falsifier` which is for unary false-like constructors, such as
+`Nothing`.
 
 ```haskell
 import Combinator.Booly
@@ -13,18 +13,21 @@ import Combinator.Booly
 
 ## Operator precedence
 
-The operators specify argument precedence where necessary, visually indicating
-which argument is to be returned when there is a conflict, by the LT/GT symbols.
+The operators visually indicate precedence,
+which argument is to be returned when there is a conflict, by the direction of
+the LT/GT symbols.
 Xorlike does not have this
 issue because to succeed both cannot be true-like, and when both are false-like
 only unary false-like constructors are allowed, hence the argument precedence
 is irrelevant.
 
 ```haskell
--- Both true-like
+-- Or
 Just 1 <|< Just 2 == Just 1 == Just 2 >|> Just 1
--- Both false-like
+-- And
 Left 1 <&< Left 2 == Left 1 == Left 2 >&> Left 1
+-- Xor
+Just 1 <^> Just 2 == Nothing == Just 2 <^> Just 1
 ```
 
 ## Default typeclass signatures
@@ -72,8 +75,9 @@ __Structural commutativity__
 layer.
 
 ```haskell
-Just 1 <&< Just 2 ≅ Just 2 <&< Just 1
-Just _ <&< Just _ ≅ Just _ <&< Just _
+Right 1 <&< Left 2 ≅ Right 2 <&< Left 1
+Right _ <&< Left _ ≅ Right _ <&< Left _
+Left _ ≅ Left _
 ```
 
 __Absorbing element / truth table__
@@ -110,8 +114,9 @@ __Structural commutativity__
 layer.
 
 ```haskell
-Just 1 <|< Just 2 ≅ Just 2 <|< Just 1
-Just _ <|< Just _ ≅ Just _ <|< Just _
+Right 1 <|< Left 2 ≅ Right 2 <|< Left 1
+Right _ <|< Left _ ≅ Right _ <|< Left _
+Right _ ≅ Right _
 ```
 
 __Identity element / Truth table__
@@ -141,6 +146,7 @@ construction layer.
 ```haskell
 Just 1 <^> (Just 2 <^> Just 3) ≅ (Just 1 <^> Just 2) <^> Just 3
 Just _ <^> (Just _ <^> Just _) ≅ (Just _ <^> Just _) <^> Just _
+Just _ ≅ Just _
 ```
 
 __Structural commutativity__
@@ -151,6 +157,7 @@ layer.
 ```haskell
 Just 1 <^> Just 2 ≅ Just 2 <^> Just 1
 Just _ <^> Just _ ≅ Just _ <^> Just _
+Nothing ≅ Nothing
 ```
 
 __Truth table__
