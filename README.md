@@ -1,7 +1,7 @@
 
-A set of logical combinators, under the typeclasses `Andlike`, `Orlike`, and
+A set of logical combinators under the typeclasses `Andlike`, `Orlike`, and
 `Xorlike`,
-defining operations dealing with boolean-representable structures.
+defining operations dealing with *boolean-representable* structures.
 `Maybe` which has true-like `Just` and false-like `Nothing`, or `[a]` by
 true-like non-empty list and false-like empty list. It also introduces
 the optional `Falsifier` which is for unary false-like constructors, such as

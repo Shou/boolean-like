@@ -356,7 +356,7 @@ andLast as
 andMappend :: (Andlike a, Monoid a) => a -> a -> a
 andMappend a b = (a <&< b) `mappend` (a >&> b)
 
--- | Monadic concatenation with the annihilating operator guarding each argument.
+-- | Monadic concatenation with the annihilating operator guarding each element.
 andMconcat :: (Andlike a, Falsifier a, Monoid a, Foldable t) => t a -> a
 andMconcat as
     | null as   = false
